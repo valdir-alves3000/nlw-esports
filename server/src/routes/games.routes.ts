@@ -46,6 +46,7 @@ gamesRoutes.get("/:id/ads", async (req: Request, res: Response) => {
         ...ad,
         weekDays: ad.weekDays.split(","),
         hourStart: convertMinutesToHourString(ad.hourStart),
+        hourEnd: convertMinutesToHourString(ad.hourEnd),
       };
     })
   );
