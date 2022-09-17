@@ -3,10 +3,21 @@ import { prisma } from "../lib/prisma";
 
 const adsRoutes = Router();
 
-adsRoutes.get("/", async (req: Request, res: Response) => {
-  const ads = await prisma.ad.findMany();
+adsRoutes.get("/:id/discord", async (req: Request, res: Response) => {
+  const adId = req.params.id;
 
-  return res.status(201).json([]);
+  const ad = await prisma.ad.findUniqueOrThrow({
+    select: {
+      discord: true,
+    },
+    where: {
+      id: adId,
+    },
+  });
+
+  return res.json({
+    discord: ad.discord,
+  });
 });
 
 export { adsRoutes };

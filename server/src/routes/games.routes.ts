@@ -1,23 +1,82 @@
 import { Request, Response, Router } from "express";
 import { prisma } from "../lib/prisma";
+import { convertHourStringToMinutes } from "../utils/convert-hour-string-to-minutes";
+import { convertMinutesToHourString } from "../utils/convert-minutes-to-hour-string";
 
 const gamesRoutes = Router();
 
 gamesRoutes.get("/", async (req: Request, res: Response) => {
-  const games = await prisma.game.findMany();
+  const games = await prisma.game.findMany({
+    include: {
+      _count: {
+        select: {
+          ads: true,
+        },
+      },
+    },
+  });
 
   return res.json(games);
 });
 
-gamesRoutes.get("/:id/ads", (req: Request, res: Response) => {
-  return res.json([
-    { id: 1, name: "Anúncio 1" },
-    { id: 2, name: "Anúncio 2" },
-    { id: 3, name: "Anúncio 3" },
-    { id: 4, name: "Anúncio 4" },
-    { id: 5, name: "Anúncio 5" },
-    { id: 6, name: "Anúncio 6" },
-  ]);
+gamesRoutes.get("/:id/ads", async (req: Request, res: Response) => {
+  const gameId = req.params.id;
+
+  const ads = await prisma.ad.findMany({
+    select: {
+      id: true,
+      name: true,
+      weekDays: true,
+      useVoiceChannel: true,
+      yearsPlaying: true,
+      hourStart: true,
+      hourEnd: true,
+    },
+    where: {
+      gameId,
+    },
+    orderBy: {
+      created_at: "desc",
+    },
+  });
+
+  return res.json(
+    ads.map((ad) => {
+      return {
+        ...ad,
+        weekDays: ad.weekDays.split(","),
+        hourStart: convertMinutesToHourString(ad.hourStart),
+      };
+    })
+  );
+});
+
+gamesRoutes.post("/:id/ads", async (req: Request, res: Response) => {
+  const gameId = req.params.id;
+  const {
+    name,
+    yearsPlaying,
+    discord,
+    weekDays,
+    hourStart,
+    hourEnd,
+    useVoiceChannel,
+  } = req.body;
+
+  const ad = await prisma.ad.create({
+    data: {
+      gameId,
+      name,
+      yearsPlaying,
+      discord,
+      weekDays: weekDays.join(","),
+      hourStart: convertHourStringToMinutes(hourStart),
+      hourEnd: convertHourStringToMinutes(hourEnd),
+      useVoiceChannel,
+    },
+  });
+
+  return res.status(201).json(ad);
 });
 
 export { gamesRoutes };

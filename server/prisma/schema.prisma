@@ -11,7 +11,7 @@ model Game {
   id        String @id @default(uuid())
   title     String
   bannerUrl String
-  Ads       Ad[]
+  ads       Ad[]
 
   @@map("games")
 }
@@ -23,8 +23,8 @@ model Ad {
   yearsPlaying    Int
   discord         String
   weekDays        String
-  hourStart       String
-  hourEnd         String
+  hourStart       Int
+  hourEnd         Int
   useVoiceChannel Boolean
   created_at      DateTime @default(now())
 
